@@ -1,40 +1,19 @@
 <template>
   <div class="home">
-    <Navbar />
-    <h1>{{ exampleVar }} Vue Boilerplates</h1>
-    <h3>vue-typescript-boilerplate</h3>
-    <img width="130px" height="auto" alt="" src="/img/vue-boilerplates.svg" />
-    <h3>Vue + Typescript + Lazy loading and code splitting</h3>
-    <div class="block">
-      <h2>Why Vue Boilerplates?</h2>
-      <p>
-        While mobile-first approach becomes a standard and uncertain network
-        conditions are something we should always take into consideration, it’s
-        harder and harder to keep your application loading fast. Vue
-        Boilerplates was built with vue.js performance optimization techniques
-        that make them loading instantly and perform smooth 🚀.
-      </p>
-    </div>
-    <div class="block">
-      <h2>Lets grow together!</h2>
-      <h3>Please consider becoming a donor 🙏.</h3>
-      <p>
-        Make a custom one time or recurring contribution to support my open
-        source projects
-      </p>
-      <a
-        class="donate-btn"
-        target="_blank"
-        href="https://opencollective.com/vue-boilerplates"
-        >Donate
-      </a>
-    </div>
+    <input type="text" v-model="username" id="username" />
+    <input type="password" v-model="password" id="password" />
+    <button @click="login">Login</button>
+    <button @click="register">Register</button>
+
+    <div>{{ authStatus }}</div>
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component } from "vue-property-decorator";
 import Navbar from "@/components/Navbar.vue";
+import { vxm } from "@/store";
+import { post } from "@/utils/utils";
 
 @Component({
   name: "Home",
@@ -43,7 +22,36 @@ import Navbar from "@/components/Navbar.vue";
   },
 })
 export default class Home extends Vue {
-  private exampleVar: ExampleTypeDefinition = "Hello";
+  private username: string = "";
+  private password: string = "";
+
+  private authStatus: string = "";
+
+  private async login() {
+    try {
+      const resp = (await (
+        await post("/login", {
+          username: this.username,
+          password: this.password,
+        })
+      ).json()) as LoginResponse;
+
+      vxm.auth.token = resp.data.token;
+      console.log(resp);
+
+      this.$router.push("/dashboard");
+    } catch (e) {
+      console.error(e);
+      this.authStatus = e as string;
+    }
+  }
+
+  private register() {
+    post("/register", {
+      username: this.username,
+      password: this.password,
+    });
+  }
 }
 </script>
 
