@@ -8,6 +8,7 @@
     />
     <button @click="uploadFile">Upload</button>
     <button @click="listFiles">List</button>
+    <button @click="downloadFile">Download</button>
     <div>{{ uploadStatus }}</div>
   </div>
 </template>
@@ -54,6 +55,25 @@ export default class Dashboard extends Vue {
     if (vxm.auth.token) {
       const resp = await (await get("/api/list", vxm.auth.token)).json();
       console.log(resp);
+    }
+  }
+
+  private async downloadFile() {
+    if (vxm.auth.token) {
+      const resp = await get("/api/download?path=testfile.txt", vxm.auth.token);
+      const blob = await resp.blob();
+
+      var a = document.createElement("a");
+      document.body.appendChild(a);
+      a.style.display = "none";
+
+      var file = window.URL.createObjectURL(blob);
+      a.href = file;
+      a.download = "testfile.txt";
+      a.click();
+      URL.revokeObjectURL(file);
+
+      a.remove();
     }
   }
 }
