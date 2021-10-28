@@ -9,6 +9,8 @@
     <button @click="uploadFile">Upload</button>
     <button @click="listFiles">List</button>
     <button @click="downloadFile">Download</button>
+    <button @click="logout">Logout</button>
+
     <div>{{ uploadStatus }}</div>
 
     <b-table striped hover :items="fileList" :fields="fields" :key="rTable">
@@ -73,7 +75,6 @@
 <script lang="ts">
 import { Vue, Component } from "vue-property-decorator";
 import Navbar from "@/components/Navbar.vue";
-import { vxm } from "@/store";
 import { get, post } from "@/utils/utils";
 
 @Component({
@@ -83,6 +84,8 @@ import { get, post } from "@/utils/utils";
   },
 })
 export default class Dashboard extends Vue {
+  private jwtToken: string | undefined;
+
   private fileInput: File | null = null;
   private uploadStatus = "";
   private fileList: string[] = [];
@@ -102,6 +105,7 @@ export default class Dashboard extends Vue {
   ];
 
   created(): void {
+    this.jwtToken = this.$cookies.get("jwtToken");
     this.fetchData();
   }
 
@@ -111,17 +115,19 @@ export default class Dashboard extends Vue {
     this.activeVersionList = {};
 
     const files = await this.listFiles();
-    for (const file of files.data) {
-      if (!this.fileListParsed[file.file_name]) {
-        this.fileListParsed[file.file_name] = [];
+    if (files.data) {
+      for (const file of files.data) {
+        if (!this.fileListParsed[file.file_name]) {
+          this.fileListParsed[file.file_name] = [];
+        }
+
+        this.fileListParsed[file.file_name].push(file);
       }
+      this.fileList.push(...Object.keys(this.fileListParsed));
 
-      this.fileListParsed[file.file_name].push(file);
-    }
-    this.fileList.push(...Object.keys(this.fileListParsed));
-
-    for (const f of this.fileList) {
-      this.activeVersionList[f] = this.fileListParsed[f][0].version;
+      for (const f of this.fileList) {
+        this.activeVersionList[f] = this.fileListParsed[f][0].version;
+      }
     }
   }
 
@@ -156,12 +162,12 @@ export default class Dashboard extends Vue {
   }
 
   private async uploadFile() {
-    if (this.fileInput && vxm.auth.token) {
+    if (this.fileInput && this.jwtToken) {
       const resp = (await (
         await post(
           "/api/upload?path=" + this.fileInput.name,
           this.fileInput,
-          vxm.auth.token,
+          this.jwtToken,
           false
         )
       ).json()) as UploadResponse;
@@ -173,8 +179,8 @@ export default class Dashboard extends Vue {
   }
 
   private async listFiles(): Promise<BlobListResponse> {
-    if (vxm.auth.token) {
-      const resp = await (await get("/api/list", vxm.auth.token)).json();
+    if (this.jwtToken) {
+      const resp = await (await get("/api/list", this.jwtToken)).json();
       console.log(resp);
       return resp as BlobListResponse;
     }
@@ -186,10 +192,10 @@ export default class Dashboard extends Vue {
   }
 
   private async downloadFile(key: string, version: string) {
-    if (vxm.auth.token) {
+    if (this.jwtToken) {
       const resp = await get(
         "/api/download?path=" + key + "&version=" + version,
-        vxm.auth.token
+        this.jwtToken
       );
       const blob = await resp.blob();
 
@@ -208,18 +214,23 @@ export default class Dashboard extends Vue {
   }
 
   private async deleteFile(key: string, version: string) {
-    if (vxm.auth.token) {
+    if (this.jwtToken) {
       const resp = await post(
         "/api/delete",
         {
           file_name: key,
           version,
         },
-        vxm.auth.token
+        this.jwtToken
       );
 
       await this.fetchData();
     }
+  }
+
+  private logout() {
+    this.$cookies.remove("jwtToken");
+    this.$router.push("/");
   }
 }
 </script>

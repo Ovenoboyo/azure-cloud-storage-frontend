@@ -79,9 +79,9 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
+import Vue from "vue";
+import { Component } from "vue-property-decorator";
 import Navbar from "@/components/Navbar.vue";
-import { vxm } from "@/store";
 import { post } from "@/utils/utils";
 
 @Component({
@@ -98,6 +98,12 @@ export default class Home extends Vue {
 
   private authStatus = "";
 
+  private created() {
+    if (this.$cookies.get("jwtToken")) {
+      this.$router.push("/dashboard");
+    }
+  }
+
   private toggleLoginSignup() {
     this.isLogin = !this.isLogin;
   }
@@ -111,7 +117,7 @@ export default class Home extends Vue {
         })
       ).json()) as LoginResponse;
 
-      vxm.auth.token = resp.data.token;
+      this.$cookies.set("jwtToken", resp.data.token, 3 * 60 * 60);
       console.log(resp);
 
       this.$router.push("/dashboard");
