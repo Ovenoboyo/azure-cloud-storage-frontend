@@ -78,7 +78,7 @@ import Navbar from "@/components/Navbar.vue";
 import { get, post } from "@/utils/utils";
 
 @Component({
-  name: "About",
+  name: "Dashboard",
   components: {
     Navbar,
   },
