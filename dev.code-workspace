@@ -47,7 +47,9 @@
 		"recommendations": [
 			"dbaeumer.vscode-eslint",
 			"octref.vetur",
-			"lauren.vue-pack"
+			"lauren.vue-pack",
+			"sdras.vue-vscode-snippets",
+			"ducksoupdev.vue2"
 		]
 	}
 }

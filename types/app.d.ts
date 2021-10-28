@@ -7,6 +7,12 @@ interface LoginResponse {
     }
 }
 
+interface RegisterResponse {
+    success?: boolean
+    error?: string
+
+}
+
 interface UploadResponse {
     success: boolean
 }

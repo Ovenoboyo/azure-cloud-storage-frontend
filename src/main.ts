@@ -4,8 +4,9 @@ import "@/registerServiceWorker";
 import router from "@/router/index";
 import { store } from "@/store";
 import "@/assets/css/styles.scss";
-Vue.prototype.$mapFields = Vue;
+import '@/plugins/bootstrap'
 
+Vue.prototype.$mapFields = Vue;
 Vue.config.productionTip = false;
 
 new Vue({
