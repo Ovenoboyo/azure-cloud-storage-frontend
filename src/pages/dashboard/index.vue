@@ -7,7 +7,7 @@
       id="fileToUpload"
     />
     <button @click="uploadFile">Upload</button>
-    <button @click="listFiles">List</button>
+    <button @click="fetchData">List</button>
     <button @click="downloadFile">Download</button>
     <button @click="logout">Logout</button>
 
@@ -18,13 +18,13 @@
         {{ getFileData(data.item).file_name }}
       </template>
       <template #cell(last_modified)="data">
-        {{ getFileData(data.item).last_modified }}
+        {{ parseTimestamp(getFileData(data.item).last_modified) }}
       </template>
       <template #cell(md5)="data">
         {{ getFileData(data.item).md5 }}
       </template>
       <template #cell(size)="data">
-        {{ getFileData(data.item).size }}
+        {{ humanFileSize(getFileData(data.item).size) }}
       </template>
       <template #cell(version)="data">
         <b-dropdown
@@ -76,6 +76,7 @@
 import { Vue, Component } from "vue-property-decorator";
 import Navbar from "@/components/Navbar.vue";
 import { get, post } from "@/utils/utils";
+import moment from "moment";
 
 @Component({
   name: "Dashboard",
@@ -107,6 +108,34 @@ export default class Dashboard extends Vue {
   created(): void {
     this.jwtToken = this.$cookies.get("jwtToken");
     this.fetchData();
+  }
+
+  private parseTimestamp(timestamp: number) {
+    return moment(timestamp).format("DD-MM-YYYY LT");
+  }
+
+  private humanFileSize(bytes: number, si = false, dp = 1) {
+    const thresh = si ? 1000 : 1024;
+
+    if (Math.abs(bytes) < thresh) {
+      return bytes + " B";
+    }
+
+    const units = si
+      ? ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+      : ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
+    let u = -1;
+    const r = 10 ** dp;
+
+    do {
+      bytes /= thresh;
+      ++u;
+    } while (
+      Math.round(Math.abs(bytes) * r) / r >= thresh &&
+      u < units.length - 1
+    );
+
+    return bytes.toFixed(dp) + " " + units[u];
   }
 
   private async fetchData() {
