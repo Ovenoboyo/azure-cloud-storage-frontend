@@ -117,7 +117,7 @@ export default class Home extends Vue {
       this.$router.push("/dashboard");
     } catch (e) {
       console.error(e);
-      this.authStatus = e as string;
+      this.authStatus = "Invalid Username/Password";
     }
   }
 
