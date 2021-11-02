@@ -5,6 +5,7 @@ import router from "@/router/index";
 import "@/assets/css/styles.scss";
 import '@/plugins/bootstrap'
 import '@/plugins/cookie'
+import '@/plugins/toast'
 
 Vue.prototype.$mapFields = Vue;
 Vue.config.productionTip = false;

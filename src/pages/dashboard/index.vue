@@ -1,79 +1,230 @@
 <template>
-  <div class="about">
-    <input
-      type="file"
-      @change="onInputChange"
-      name="fileToUpload"
-      id="fileToUpload"
-    />
-    <button @click="uploadFile">Upload</button>
-    <button @click="fetchData">List</button>
-    <button @click="downloadFile">Download</button>
-    <button @click="logout">Logout</button>
-
-    <div>{{ uploadStatus }}</div>
-
-    <b-table striped hover :items="fileList" :fields="fields" :key="rTable">
-      <template #cell(file_name)="data">
-        {{ getFileData(data.item).file_name }}
-      </template>
-      <template #cell(last_modified)="data">
-        {{ parseTimestamp(getFileData(data.item).last_modified) }}
-      </template>
-      <template #cell(md5)="data">
-        {{ getFileData(data.item).md5 }}
-      </template>
-      <template #cell(size)="data">
-        {{ humanFileSize(getFileData(data.item).size) }}
-      </template>
-      <template #cell(version)="data">
-        <b-dropdown
-          id="dropdown-1"
-          :text="activeVersionList[data.item]"
-          class="m-md-2"
+  <b-container fluid class="dashboard-container">
+    <b-row
+      class="header"
+      no-gutters
+      @drop="dropFile"
+      @dragover="dragover"
+      @dragleave="dragleave"
+    >
+      <b-col>
+        <div class="d-flex upload-container" @click="openUploadDialog">
+          <div class="upload-button">+ Upload New File</div>
+          <div class="dnd d-flex align-items-center">or Drag and Drop</div>
+        </div>
+        <input
+          type="file"
+          @change="onInputChange"
+          name="fileToUpload"
+          ref="fileToUpload"
+          hidden
+        />
+      </b-col>
+      <b-col align-self="center">
+        <div
+          class="d-flex justify-content-end logout-container"
+          @click="logout"
         >
-          <b-dropdown-item
-            v-for="version of getAllVersions(data.item)"
-            @click="setActiveVersion(data.item, version)"
-            :key="data.item + version"
-          >
-            {{ version }}
-          </b-dropdown-item>
-        </b-dropdown>
-      </template>
-      <template #cell(download)="data">
-        <svg
-          width="16"
-          height="18"
-          viewBox="0 0 16 18"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          @click="downloadFile(data.item, activeVersionList[data.item])"
-        >
-          <path d="M15 6H11V0H5V6H1L8 14L15 6ZM0 16H16V18H0V16Z" fill="black" />
-        </svg>
-      </template>
-      <template #cell(delete)="data">
-        <svg
-          width="17"
-          height="18"
-          viewBox="0 0 17 18"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          @click="deleteFile(data.item, activeVersionList[data.item])"
-        >
-          <path
-            d="M8.50011 6.20016e-09C9.26294 -4.83082e-05 9.99689 0.28227 10.5514 0.789042C11.1059 1.29581 11.4388 1.98862 11.482 2.72533L11.4866 2.88889H16.311C16.4856 2.88894 16.6537 2.95311 16.7813 3.06842C16.9089 3.18373 16.9865 3.3416 16.9984 3.51012C17.0103 3.67863 16.9556 3.84524 16.8454 3.97627C16.7352 4.10729 16.5777 4.19298 16.4047 4.216L16.311 4.22222H15.5795L14.4033 15.7956C14.3444 16.3725 14.0753 16.9105 13.6443 17.3133C13.2132 17.7161 12.6481 17.9576 12.0499 17.9947L11.8882 18H5.11201C4.51237 18 3.93228 17.7937 3.4754 17.418C3.01852 17.0424 2.71463 16.5218 2.61803 15.9493L2.5969 15.7947L1.41975 4.22222H0.689198C0.522653 4.22222 0.361744 4.16387 0.236229 4.05798C0.110713 3.9521 0.0290826 3.80583 0.00643248 3.64622L0 3.55556C7.02329e-06 3.39446 0.060321 3.23881 0.169788 3.1174C0.279255 2.99598 0.43047 2.91702 0.595467 2.89511L0.689198 2.88889H5.51358C5.51358 2.12271 5.82823 1.38791 6.38831 0.846136C6.9484 0.304364 7.70803 6.20016e-09 8.50011 6.20016e-09V6.20016e-09ZM14.1947 4.22222H2.80458L3.96886 15.664C3.99464 15.9193 4.11095 16.1581 4.29804 16.3399C4.48514 16.5217 4.73149 16.6353 4.9953 16.6613L5.11201 16.6667H11.8882C12.4396 16.6667 12.9073 16.2889 13.0139 15.776L13.0323 15.664L14.1938 4.22222H14.1947ZM10.1082 6.66667C10.2748 6.66667 10.4357 6.72502 10.5612 6.8309C10.6867 6.93679 10.7683 7.08306 10.791 7.24267L10.7974 7.33333V13.5556C10.7974 13.7245 10.731 13.8871 10.6118 14.0105C10.4926 14.1339 10.3294 14.209 10.1552 14.2205C9.981 14.232 9.80876 14.1791 9.6733 14.0725C9.53785 13.9659 9.44927 13.8136 9.42547 13.6462L9.41904 13.5556V7.33333C9.41904 7.15652 9.49165 6.98695 9.6209 6.86193C9.75015 6.7369 9.92545 6.66667 10.1082 6.66667ZM6.89198 6.66667C7.05852 6.66667 7.21943 6.72502 7.34495 6.8309C7.47046 6.93679 7.55209 7.08306 7.57474 7.24267L7.58117 7.33333V13.5556C7.58112 13.7245 7.51479 13.8871 7.39558 14.0105C7.27636 14.1339 7.11316 14.209 6.93895 14.2205C6.76474 14.232 6.59251 14.1791 6.45705 14.0725C6.32159 13.9659 6.23301 13.8136 6.20921 13.6462L6.20278 13.5556V7.33333C6.20278 7.15652 6.27539 6.98695 6.40464 6.86193C6.53389 6.7369 6.70919 6.66667 6.89198 6.66667ZM8.50011 1.33333C8.09652 1.33335 7.70769 1.48015 7.41081 1.7446C7.11393 2.00906 6.9307 2.37182 6.89749 2.76089L6.89198 2.88889H10.1082C10.1082 2.47633 9.93881 2.08067 9.63722 1.78895C9.33564 1.49722 8.92661 1.33333 8.50011 1.33333Z"
-            fill="black"
+          <div>Logout</div>
+          <img
+            class="logout-icon"
+            src="@/assets/img/fe_logout.svg"
+            alt="logout"
           />
-        </svg>
-      </template>
-    </b-table>
-  </div>
+        </div>
+      </b-col>
+    </b-row>
+
+    <b-row>
+      <b-col>
+        <b-table
+          striped
+          hover
+          :items="fileList"
+          :fields="fields"
+          :key="rTable"
+          sticky-header
+          class="table-container"
+          tbody-tr-class="table-row"
+        >
+          <template #head(refresh)="data">
+            <div
+              class="d-flex align-items-center refresh-container"
+              @click="fetchData"
+            >
+              <span>{{ data.label }}</span>
+              <img
+                class="refresh-icon"
+                src="@/assets/img/ci_refresh.svg"
+                alt="refresh"
+              />
+            </div>
+          </template>
+          <template #cell(file_name)="data">
+            {{ getFileData(data.item).file_name }}
+          </template>
+          <template #cell(last_modified)="data">
+            {{ parseTimestamp(getFileData(data.item).last_modified) }}
+          </template>
+          <template #cell(md5)="data">
+            {{ getFileData(data.item).md5 }}
+          </template>
+          <template #cell(size)="data">
+            <div class="size-col">
+              {{ humanFileSize(getFileData(data.item).size) }}
+            </div>
+          </template>
+          <template #cell(version)="data">
+            <b-dropdown id="dropdown-1">
+              <template #button-content>
+                <div class="d-flex align-items-center">
+                  <div>{{ parseVersion(activeVersionList[data.item]) }}</div>
+                  <img
+                    class="dropdown-icon"
+                    src="@/assets/img/dropdown.svg"
+                    alt="dropdown"
+                  />
+                </div>
+              </template>
+              <b-dropdown-item
+                v-for="version of getAllVersions(data.item)"
+                @click="setActiveVersion(data.item, version)"
+                :key="data.item + version"
+              >
+                {{ parseVersion(version) }}
+              </b-dropdown-item>
+            </b-dropdown>
+          </template>
+          <template #cell(refresh)="data">
+            <div class="d-flex">
+              <img
+                src="@/assets/img/bx_bxs-download.svg"
+                alt="download"
+                @click="deleteFile(data.item, activeVersionList[data.item])"
+              />
+              <img
+                src="@/assets/img/fluent_delete-24-regular.svg"
+                alt="delete"
+                class="delete-icon"
+                @click="deleteFile(data.item, activeVersionList[data.item])"
+              />
+            </div>
+          </template>
+        </b-table>
+      </b-col>
+    </b-row>
+  </b-container>
 </template>
 
+<style lang="sass">
+@import url('https://fonts.googleapis.com/css2?family=Lato&display=swap')
+*
+  font-family: 'Lato', sans-serif
+
+*::-webkit-scrollbar,
+*::-webkit-scrollbar-thumb
+  width: 26px
+  border-radius: 13px
+  background-clip: padding-box
+  border: 10px solid transparent
+  min-height: 50px
+
+*::-webkit-scrollbar-thumb
+  box-shadow: inset 0 0 0 10px
+  color: #a3a3a3
+  min-height: 40px
+
+*::-webkit-scrollbar-track
+  margin-top: calc( 0.75rem * 2 + 18px)
+  background: transparent
+
+th
+  font-weight: 600
+
+td
+  vertical-align: middle
+
+.dropdown-toggle
+  background: transparent !important
+  border-color: transparent !important
+  color: #1452CC !important
+  padding: 0
+  font-style: italic
+  &::after
+    content: none !important
+
+.dropdown-item
+  color: #1452CC !important
+  border-radius: 25px
+  font-style: italic
+  &:active
+    background-color: #e9ecef
+
+.dropdown-menu
+  box-shadow: 0px 0px 30px rgba(48, 48, 48, 0.19)
+  border: none
+  border-radius: 25px
+
+.table-row
+  height: 75px
+</style>
+
+<style lang="sass" scoped>
+.header
+  height: 60px
+  padding: 15px 0
+  -webkit-user-select: none
+  -moz-user-select: none
+  -ms-user-select: none
+  user-select: none
+
+.dashboard-container
+  padding: 0 30px
+  height: 100vh
+
+.dnd
+  margin-left: 10px
+  font-size: 14px
+  color: #ADADAD
+
+.upload-button
+  font-size: 20px
+  color: #1452CC
+
+.logout-icon
+  margin-left: 8px
+
+.logout-container
+  color: #E83B3B
+  font-size: 20px
+  cursor: pointer
+
+.upload-container
+  cursor: pointer
+
+.table-container
+  margin-top: 40px
+  max-height: calc( 100vh - 60px - 40px - 30px)
+
+.refresh-icon
+  margin-left: 4px
+
+.delete-icon
+  margin-left: 36px
+
+.dropdown-icon
+  margin-left: 10px
+
+.size-col
+  padding-right: 10px
+
+.refresh-container
+  cursor: pointer
+</style>
+
+
 <script lang="ts">
-import { Vue, Component } from "vue-property-decorator";
+import { Vue, Component, Ref } from "vue-property-decorator";
 import Navbar from "@/components/Navbar.vue";
 import { get, post } from "@/utils/utils";
 import moment from "moment";
@@ -87,7 +238,6 @@ import moment from "moment";
 export default class Dashboard extends Vue {
   private jwtToken: string | undefined;
 
-  private fileInput: File | null = null;
   private uploadStatus = "";
   private fileList: string[] = [];
   private fileListParsed: AzureFileParsed = {};
@@ -95,14 +245,16 @@ export default class Dashboard extends Vue {
 
   private rTable = false;
 
+  @Ref("fileToUpload")
+  private uploadField!: HTMLInputElement;
+
   private fields = [
     "file_name",
-    "last_modified",
-    "md5",
-    "size",
     "version",
-    "download",
-    "delete",
+    "size",
+    "md5",
+    "last_modified",
+    "refresh",
   ];
 
   created(): void {
@@ -112,6 +264,10 @@ export default class Dashboard extends Vue {
 
   private parseTimestamp(timestamp: number) {
     return moment(timestamp).format("DD-MM-YYYY LT");
+  }
+
+  private parseVersion(timestamp: string) {
+    return moment(timestamp).format("YYYY-MM-DD LT");
   }
 
   private humanFileSize(bytes: number, si = false, dp = 1) {
@@ -184,24 +340,47 @@ export default class Dashboard extends Vue {
   private onInputChange(event: HTMLInputFileEvent) {
     if (event) {
       const files = event.target.files;
-      if (files.length > 0) {
-        this.fileInput = files[0];
+      for (const f of files) {
+        this.uploadFile(f);
       }
     }
   }
 
-  private async uploadFile() {
-    if (this.fileInput && this.jwtToken) {
+  private dragover(event: DragEvent) {
+    event.preventDefault();
+  }
+
+  private dragleave(event: DragEvent) {
+    event.preventDefault();
+  }
+
+  private dropFile(event: DragEvent) {
+    if (event) {
+      event.preventDefault();
+      if (event.dataTransfer) {
+        for (const f of event.dataTransfer?.files) {
+          this.uploadFile(f);
+        }
+      }
+    }
+  }
+
+  private openUploadDialog() {
+    this.uploadField.click();
+  }
+
+  private async uploadFile(file: File) {
+    if (file && this.jwtToken) {
+      this.$toast.info("Uploading " + file.name);
       const resp = (await (
-        await post(
-          "/api/upload?path=" + this.fileInput.name,
-          this.fileInput,
-          this.jwtToken,
-          false
-        )
+        await post("/api/upload?path=" + file.name, file, this.jwtToken, false)
       ).json()) as UploadResponse;
 
-      this.uploadStatus = "" + (resp.success ?? "Failed");
+      if (resp.success) {
+        this.$toast.open("Uploaded " + file.name);
+      } else {
+        this.$toast.error("Failed to upload " + file.name);
+      }
 
       await this.fetchData();
     }
@@ -210,7 +389,6 @@ export default class Dashboard extends Vue {
   private async listFiles(): Promise<BlobListResponse> {
     if (this.jwtToken) {
       const resp = await (await get("/api/list", this.jwtToken)).json();
-      console.log(resp);
       return resp as BlobListResponse;
     }
 
