@@ -41,7 +41,13 @@
 			"lastname",
 			"Vuex"
 		],
-		"editor.renameOnType": true
+		"editor.renameOnType": true,
+		"markdownlint.config": {
+			"MD028": false,
+			"MD025": {
+				"front_matter_title": ""
+			}
+		}
 	},
 	"extensions": {
 		"recommendations": [

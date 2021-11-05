@@ -1,47 +1,17 @@
-# Vue Boilerplates : vue-typescript-boilerplate
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FOvenoboyo%2Fvue-typescript-boilerplate.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FOvenoboyo%2Fvue-typescript-boilerplate?ref=badge_shield)
+# Azure cloud storage frontend
 
-
-> A vue.js project with Latest Vue + Typescript + Lazy loading and code splitting
-
-## Features
-The following features are delivered out of the box in this repo, you are just one click away from starting your Progressive Web application (PWA) with advanced features of Vue,
-
-- Vue 2
-- Vue router
-- Vue auto router
-- Vue router layout
-- Vuex
-- Vuex class component
-- Vue Class Component
-- Typescript
-- PWA - service worker
-- SASS
-- babel
-- Webpack bundling
-- ESLint
-- cypress
-- jest
-- gitignore
-- VScode Workspace (optional)
-
-## Bonus
-**Lazy loading and Code Splitting**  
-With dynamic imports, all pages including their dependency libraries are exported as web chunks with custom name references for lazy loading :sunglasses:  
-Even Vue library was exported as a seperate web chunk :heart_eyes:
+Frontend for [Azure Cloud Storage](https://github.com/Ovenoboyo/azure_cloud_storage)
 
 ## Getting started
 
 ```bash
 # 1. Clone the repository.
-git clone https://github.com/Vue-Boilerplates/vue-typescript-boilerplate.git my-new-project
+git clone https://github.com/Ovenoboyo/azure-cloud-storage-frontend
 
 # 2. Enter your newly-cloned folder.
-cd my-new-project
+cd azure-cloud-storage-frontend
 
-```
 
-```bash
 ## proceed with yarn
 
 # 3. Install dependencies. Make sure yarn is installed: https://yarnpkg.com/lang/en/docs/install
