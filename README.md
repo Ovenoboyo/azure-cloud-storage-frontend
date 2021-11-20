@@ -2,6 +2,10 @@
 
 Frontend for [Azure Cloud Storage](https://github.com/Ovenoboyo/azure_cloud_storage)
 
+## Implementation and screenshots
+
+Implementation and screenshots can be found [here](https://github.com/Ovenoboyo/azure_cloud_storage)
+
 ## Getting started
 
 ```bash
