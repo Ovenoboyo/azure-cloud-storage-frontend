@@ -10,28 +10,45 @@
                   {{ isLogin ? "Sign in" : "Register" }}
                 </h1>
               </b-row>
-              <b-row v-if="authStatus">
+              <!-- <b-row v-if="authStatus">
                 <h1 class="error-message">
                   {{ authStatus }}
                 </h1>
+              </b-row> -->
+              <b-row no-gutters align-v="center">
+                <b-col>
+                  <b-input
+                    class="login-input"
+                    aria-label="Username"
+                    placeholder="Username"
+                    type="text"
+                    v-model="username"
+                  />
+                </b-col>
+                <b-col cols="auto" class="mic-icon">
+                  <mic-icon @click.native="toggleListen" :stroke="micStroke" />
+                </b-col>
               </b-row>
               <b-row>
-                <b-input
-                  class="login-input"
-                  aria-label="Username"
-                  placeholder="Username"
-                  type="text"
-                  v-model="username"
-                />
+                <b-col>
+                  <b-input
+                    class="login-input"
+                    aria-label="password"
+                    placeholder="Password"
+                    type="password"
+                    v-model="password"
+                  />
+                </b-col>
               </b-row>
-              <b-row>
-                <b-input
-                  class="login-input"
-                  aria-label="password"
-                  placeholder="Password"
-                  type="password"
-                  v-model="password"
-                />
+              <b-row class="mt-4">
+                <b-col>
+                  <vue-recaptcha
+                    sitekey="6LdkUL0fAAAAALOxpqSh_2Hu_jO1ZO_QzmaS2iS6"
+                    @verify="verifyMethod"
+                    @expired="expiredMethod"
+                    class="speech"
+                  ></vue-recaptcha>
+                </b-col>
               </b-row>
               <b-row>
                 <button
@@ -74,20 +91,30 @@
           </b-row>
         </b-col>
       </b-row>
+      <SpeechRecognitionComponent
+        :isListen="isListen"
+        @result="onSpeechDetected"
+      />
     </b-container>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-import { Component } from "vue-property-decorator";
+import { Component, Watch } from "vue-property-decorator";
 import Navbar from "@/components/Navbar.vue";
 import { post } from "@/utils/utils";
+import { VueRecaptcha } from "vue-recaptcha";
+import SpeechRecognitionComponent from "../components/speechRecognition.vue";
+import MicIcon from "../components/micIcon.vue";
 
 @Component({
   name: "Home",
   components: {
+    VueRecaptcha,
     Navbar,
+    SpeechRecognitionComponent,
+    MicIcon,
   },
 })
 export default class Home extends Vue {
@@ -97,6 +124,45 @@ export default class Home extends Vue {
   private password = "";
 
   private authStatus = "";
+  private authSuccess = false;
+
+  private captchaStatus = false;
+
+  private isListen = false;
+
+  private micStroke = "black";
+
+  @Watch("authStatus")
+  private onAuthStatusChanged() {
+    if (this.authStatus) {
+      this.$toast.info(this.authStatus, {
+        duration: 5000,
+        message: this.authStatus,
+        position: "top",
+        type: this.authSuccess ? "success" : "error",
+      });
+    }
+  }
+
+  @Watch("isListen")
+  private onListenChanged() {
+    if (this.isListen) this.micStroke = "red";
+    else this.micStroke = "black";
+  }
+
+  private onSpeechDetected(data: any) {
+    this.username = data;
+  }
+
+  private expiredMethod() {
+    console.log("Captcha expired");
+    this.captchaStatus = false;
+  }
+
+  private verifyMethod() {
+    console.log("Captcha verified");
+    this.captchaStatus = true;
+  }
 
   private created() {
     if (this.$cookies.get("jwtToken")) {
@@ -105,45 +171,64 @@ export default class Home extends Vue {
   }
 
   private toggleLoginSignup() {
+    if (this.isLogin) this.authStatus = "";
     this.isLogin = !this.isLogin;
   }
 
   private async login() {
-    try {
-      const resp = (await (
-        await post("/login", {
-          username: this.username,
-          password: this.password,
-        })
-      ).json()) as LoginResponse;
+    if (this.captchaStatus) {
+      try {
+        const resp = (await (
+          await post("/login", {
+            username: this.username,
+            password: this.password,
+          })
+        ).json()) as LoginResponse;
 
-      this.$cookies.set("jwtToken", resp.data.token, 3 * 60 * 60);
-      console.log(resp);
+        this.$cookies.set("jwtToken", resp.data.token, 3 * 60 * 60);
+        console.log(resp);
 
-      this.$router.push("/dashboard");
-    } catch (e) {
-      console.error(e);
-      this.authStatus = "Invalid Username/Password";
+        this.$router.push("/dashboard");
+      } catch (e) {
+        console.error(e);
+        this.authStatus = "Invalid Username/Password";
+        this.authSuccess = false;
+      }
+    } else {
+      this.authStatus = "Please complete the captcha and try again";
+      this.authSuccess = false;
     }
   }
 
+  private toggleListen() {
+    this.isListen = !this.isListen;
+    console.log(this.isListen);
+  }
+
   private async register() {
-    const resp = (await (
-      await post("/register", {
-        username: this.username,
-        password: this.password,
-      })
-    ).json()) as RegisterResponse;
+    if (this.captchaStatus) {
+      const resp = (await (
+        await post("/register", {
+          username: this.username,
+          password: this.password,
+        })
+      ).json()) as RegisterResponse;
 
-    console.log(resp);
+      console.log(resp);
 
-    if (resp.error) {
-      this.authStatus = resp.error;
-    } else if (resp.success) {
-      this.authStatus = resp.success
-        ? "Successfully registered"
-        : "Registeration failed";
-      this.toggleLoginSignup();
+      if (resp.error) {
+        this.authStatus = resp.error;
+        this.authSuccess = false;
+      } else if (resp.success) {
+        this.authStatus = resp.success
+          ? "Successfully registered"
+          : "Registeration failed";
+        this.authSuccess = !!resp.success;
+        this.toggleLoginSignup();
+      }
+    } else {
+      this.authStatus = "Please complete the captcha and try again";
+      this.authSuccess = false;
     }
   }
 }
@@ -184,14 +269,12 @@ export default class Home extends Vue {
   border: none
   padding: 12px 15px
   margin: 20px 0 0 0
-  width: 100%
   border-radius: 5px
 
 .forgot_pass
   color: #333
   font-size: 14px
   text-decoration: none
-  margin: 20px 0
 
 .login_btn
   border: 1px solid #7853ce
@@ -227,4 +310,10 @@ export default class Home extends Vue {
   color: crimson
   margin-bottom: 20px
   font-size: 14px
+
+.mic-icon
+  margin-top: 15px
+  svg
+    cursor: pointer
+    width: 16px
 </style>

@@ -100,7 +100,7 @@
               <img
                 src="@/assets/img/bx_bxs-download.svg"
                 alt="download"
-                @click="deleteFile(data.item, activeVersionList[data.item])"
+                @click="downloadFile(data.item, activeVersionList[data.item])"
               />
               <img
                 src="@/assets/img/fluent_delete-24-regular.svg"
