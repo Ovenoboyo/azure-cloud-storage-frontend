@@ -43,6 +43,7 @@
               <b-row class="mt-4">
                 <b-col>
                   <vue-recaptcha
+                    ref="recaptcha"
                     sitekey="6LdkUL0fAAAAALOxpqSh_2Hu_jO1ZO_QzmaS2iS6"
                     @verify="verifyMethod"
                     @expired="expiredMethod"
@@ -157,6 +158,7 @@ export default class Home extends Vue {
   private expiredMethod() {
     console.log("Captcha expired");
     this.captchaStatus = false;
+    (this.$refs.recaptcha as any).reset();
   }
 
   private verifyMethod() {
@@ -171,6 +173,7 @@ export default class Home extends Vue {
   }
 
   private toggleLoginSignup() {
+    (this.$refs.recaptcha as any).reset();
     if (this.isLogin) this.authStatus = "";
     this.isLogin = !this.isLogin;
   }
