@@ -98,11 +98,13 @@
           <template #cell(refresh)="data">
             <div class="d-flex">
               <img
+                style="cursor: pointer"
                 src="@/assets/img/bx_bxs-download.svg"
                 alt="download"
                 @click="downloadFile(data.item, activeVersionList[data.item])"
               />
               <img
+                style="cursor: pointer"
                 src="@/assets/img/fluent_delete-24-regular.svg"
                 alt="delete"
                 class="delete-icon"
@@ -259,6 +261,9 @@ export default class Dashboard extends Vue {
 
   created(): void {
     this.jwtToken = this.$cookies.get("jwtToken");
+    if (!this.jwtToken) {
+      this.$router.push("/");
+    }
     this.fetchData();
   }
 
@@ -371,15 +376,29 @@ export default class Dashboard extends Vue {
 
   private async uploadFile(file: File) {
     if (file && this.jwtToken) {
-      this.$toast.info("Uploading " + file.name);
+      this.$toast.info("Uploading " + file.name, {
+        message: "Uploading " + file.name,
+        position: "top",
+        duration: 5000,
+      });
       const resp = (await (
         await post("/api/upload?path=" + file.name, file, this.jwtToken, false)
       ).json()) as UploadResponse;
 
       if (resp.success) {
-        this.$toast.open("Uploaded " + file.name);
+        this.$toast.success("Uploaded " + file.name, {
+          message: "Uploaded " + file.name,
+          position: "top",
+          type: "success",
+          duration: 5000,
+        });
       } else {
-        this.$toast.error("Failed to upload " + file.name);
+        this.$toast.error("Failed to upload " + file.name, {
+          message: "Failed to upload " + file.name,
+          position: "top",
+          type: "error",
+          duration: 5000,
+        });
       }
 
       await this.fetchData();
@@ -417,6 +436,12 @@ export default class Dashboard extends Vue {
       URL.revokeObjectURL(file);
 
       a.remove();
+
+      this.$toast.info("Downloaded file successfully", {
+        message: "Downloaded file successfully",
+        position: "top",
+        duration: 5000,
+      });
     }
   }
 
@@ -431,6 +456,12 @@ export default class Dashboard extends Vue {
         this.jwtToken
       );
 
+      this.$toast.info("Deleted file successfully", {
+        message: "Deleted file successfully",
+        position: "top",
+        duration: 5000,
+      });
+
       await this.fetchData();
     }
   }
@@ -438,6 +469,12 @@ export default class Dashboard extends Vue {
   private logout() {
     this.$cookies.remove("jwtToken");
     this.$router.push("/");
+    this.$toast.success("Logged out", {
+      message: "Logged out",
+      position: "top",
+      type: "success",
+      duration: 5000,
+    });
   }
 }
 </script>

@@ -5,10 +5,12 @@
         <b-col :order="isLogin ? 0 : 1" class="left-container">
           <b-row align-v="center" class="h-100 left-container-inner">
             <b-col>
-              <b-row>
-                <h1 class="login_title">
-                  {{ isLogin ? "Sign in" : "Register" }}
-                </h1>
+              <b-row align-v="center">
+                <b-col>
+                  <h1 class="login_title">
+                    {{ isLogin ? "Sign in" : "Register" }}
+                  </h1>
+                </b-col>
               </b-row>
               <!-- <b-row v-if="authStatus">
                 <h1 class="error-message">
@@ -25,7 +27,13 @@
                     v-model="username"
                   />
                 </b-col>
-                <b-col cols="auto" class="mic-icon">
+                <b-col
+                  :title="
+                    isListen ? 'Click to stop using voice' : 'Enter using voice'
+                  "
+                  cols="auto"
+                  class="mic-icon"
+                >
                   <mic-icon @click.native="toggleListen" :stroke="micStroke" />
                 </b-col>
               </b-row>
@@ -175,6 +183,7 @@ export default class Home extends Vue {
   private toggleLoginSignup() {
     (this.$refs.recaptcha as any).reset();
     if (this.isLogin) this.authStatus = "";
+    this.isListen = false;
     this.isLogin = !this.isLogin;
   }
 
@@ -192,6 +201,12 @@ export default class Home extends Vue {
         console.log(resp);
 
         this.$router.push("/dashboard");
+        this.$toast.info("Logged in successfully", {
+          duration: 5000,
+          message: "Logged in successfully",
+          position: "top",
+          type: "success",
+        });
       } catch (e) {
         console.error(e);
         this.authStatus = "Invalid Username/Password";
@@ -233,6 +248,14 @@ export default class Home extends Vue {
       this.authStatus = "Please complete the captcha and try again";
       this.authSuccess = false;
     }
+  }
+
+  mounted() {
+    window.onkeydown = (e) => {
+      if (e.code === "Enter") {
+        this.isLogin ? this.login() : this.register();
+      }
+    };
   }
 }
 </script>
@@ -319,4 +342,8 @@ export default class Home extends Vue {
   svg
     cursor: pointer
     width: 16px
+
+.reset-icon
+  width: 30px
+  margin-bottom: 25px
 </style>

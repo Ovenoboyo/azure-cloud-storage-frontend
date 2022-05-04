@@ -1,5 +1,5 @@
-import Vue from 'vue';
-import VueToast from 'vue-toast-notification';
-import 'vue-toast-notification/dist/theme-default.css';
+import Vue from "vue"
+import VueToast from "vue-toast-notification"
+import "vue-toast-notification/dist/theme-default.css"
 
-Vue.use(VueToast, { duration: 5000 });
+Vue.use(VueToast, { position: "top", duration: 5000 })
