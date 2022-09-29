@@ -115,8 +115,291 @@
         </b-table>
       </b-col>
     </b-row>
+    <EncryptModal />
+    <DecryptModal />
   </b-container>
 </template>
+
+<script lang="ts">
+import { Vue, Component, Ref } from "vue-property-decorator";
+import Navbar from "@/components/Navbar.vue";
+import { get, post } from "@/utils/utils";
+import moment from "moment";
+import EncryptModal from "@/components/EncryptModal.vue";
+import DecryptModal from "@/components/DecryptModal.vue";
+
+import { bus } from "@/main";
+
+@Component({
+  name: "Dashboard",
+  components: {
+    Navbar,
+    EncryptModal,
+    DecryptModal
+  },
+})
+export default class Dashboard extends Vue {
+  private jwtToken: string | undefined;
+
+  private uploadStatus = "";
+  private fileList: string[] = [];
+  private fileListParsed: AzureFileParsed = {};
+  private activeVersionList: { [key: string]: string } = {};
+
+  private rTable = false;
+
+  @Ref("fileToUpload")
+  private uploadField!: HTMLInputElement;
+
+  private fields = [
+    "file_name",
+    "version",
+    "size",
+    "md5",
+    "last_modified",
+    "refresh",
+  ];
+
+  created(): void {
+    this.jwtToken = this.$cookies.get("jwtToken");
+
+    if (process.env.NODE_ENV !== "development") {
+      if (!this.jwtToken) {
+        this.$router.push("/");
+        return;
+      }
+    }
+    this.fetchData();
+  }
+
+  private parseTimestamp(timestamp: number) {
+    return moment(timestamp).format("DD-MM-YYYY LT");
+  }
+
+  private parseVersion(timestamp: string) {
+    return moment(timestamp).format("YYYY-MM-DD LT");
+  }
+
+  private humanFileSize(bytes: number, si = false, dp = 1) {
+    const thresh = si ? 1000 : 1024;
+
+    if (Math.abs(bytes) < thresh) {
+      return bytes + " B";
+    }
+
+    const units = si
+      ? ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+      : ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
+    let u = -1;
+    const r = 10 ** dp;
+
+    do {
+      bytes /= thresh;
+      ++u;
+    } while (
+      Math.round(Math.abs(bytes) * r) / r >= thresh &&
+      u < units.length - 1
+    );
+
+    return bytes.toFixed(dp) + " " + units[u];
+  }
+
+  private async fetchData() {
+    this.fileListParsed = {};
+    this.fileList = [];
+    this.activeVersionList = {};
+
+    const files = await this.listFiles();
+    if (files.data) {
+      for (const file of files.data) {
+        if (!this.fileListParsed[file.file_name]) {
+          this.fileListParsed[file.file_name] = [];
+        }
+
+        this.fileListParsed[file.file_name].push(file);
+      }
+      this.fileList.push(...Object.keys(this.fileListParsed));
+
+      for (const f of this.fileList) {
+        this.activeVersionList[f] = this.fileListParsed[f][0].version;
+      }
+    }
+  }
+
+  private getFileData(key: string) {
+    const version = this.activeVersionList[key];
+    return (
+      this.fileListParsed[key].find((val) => val.version === version) ??
+      this.fileListParsed[key][0]
+    );
+  }
+
+  private getAllVersions(key: string) {
+    return this.fileListParsed[key].map((val) => val.version);
+  }
+
+  private setActiveVersion(key: string, version: string) {
+    this.$set(this.activeVersionList, key, version);
+    this.refreshTable();
+  }
+
+  private refreshTable() {
+    this.rTable = !this.rTable;
+  }
+
+  private onInputChange(event: HTMLInputFileEvent) {
+    if (event) {
+      const files = event.target.files;
+      bus.$emit("showEncryptModal", files, this.uploadFile.bind(this));
+    }
+  }
+
+  private dragover(event: DragEvent) {
+    event.preventDefault();
+  }
+
+  private dragleave(event: DragEvent) {
+    event.preventDefault();
+  }
+
+  private dropFile(event: DragEvent) {
+    if (event) {
+      event.preventDefault();
+      if (event.dataTransfer) {
+        bus.$emit(
+          "showEncryptModal",
+          event.dataTransfer.files,
+          this.uploadFile.bind(this)
+        );
+      }
+    }
+  }
+
+  private openUploadDialog() {
+    this.uploadField.click();
+  }
+
+  private async uploadFile(files: FileList, key: string) {
+    if (this.jwtToken) {
+      for (const file of files) {
+        this.$toast.info("Uploading " + file.name, {
+          message: "Uploading " + file.name,
+          position: "top",
+          duration: 5000,
+        });
+        // TODO: Pass key in body params
+        const resp = (await (
+          await post(
+            `/api/upload?path=${file.name}&key=${key}`,
+            file,
+            this.jwtToken,
+            false
+          )
+        ).json()) as UploadResponse;
+
+        if (resp.success) {
+          this.$toast.success("Uploaded " + file.name, {
+            message: "Uploaded " + file.name,
+            position: "top",
+            type: "success",
+            duration: 5000,
+          });
+        } else {
+          this.$toast.error("Failed to upload " + file.name, {
+            message: "Failed to upload " + file.name,
+            position: "top",
+            type: "error",
+            duration: 5000,
+          });
+        }
+
+        await this.fetchData();
+      }
+    }
+  }
+
+  private async listFiles(): Promise<BlobListResponse> {
+    console.log('listing files', this.jwtToken)
+    if (this.jwtToken) {
+      const resp = await (await get("/api/list", this.jwtToken)).json();
+      console.log(resp)
+
+      return resp as BlobListResponse;
+    }
+
+    return {
+      success: false,
+      data: [],
+    };
+  }
+
+  private downloadFile(key: string, version: string) {
+    console.log('downloading')
+    bus.$emit('showDecryptModal', key, version, this._downloadFile.bind(this))
+  }
+
+  private async _downloadFile(path: string, version: string, key: string) {
+    if (this.jwtToken) {
+      const resp = await get(
+        `/api/download?path=${path}&version=${version}&key=${key}`,
+        this.jwtToken
+      );
+      const blob = await resp.blob();
+
+      var a = document.createElement("a");
+      document.body.appendChild(a);
+      a.style.display = "none";
+
+      var file = window.URL.createObjectURL(blob);
+      a.href = file;
+      a.download = path;
+      a.click();
+      URL.revokeObjectURL(file);
+
+      a.remove();
+
+      this.$toast.info("Downloaded file successfully", {
+        message: "Downloaded file successfully",
+        position: "top",
+        duration: 5000,
+      });
+    }
+  }
+
+  private async deleteFile(key: string, version: string) {
+    if (this.jwtToken) {
+      const resp = await post(
+        "/api/delete",
+        {
+          file_name: key,
+          version,
+        },
+        this.jwtToken
+      );
+
+      this.$toast.info("Deleted file successfully", {
+        message: "Deleted file successfully",
+        position: "top",
+        duration: 5000,
+      });
+
+      await this.fetchData();
+    }
+  }
+
+  private logout() {
+    console.log("pusing to /");
+    this.$cookies.remove("jwtToken");
+    this.$router.push("/");
+    this.$toast.success("Logged out", {
+      message: "Logged out",
+      position: "top",
+      type: "success",
+      duration: 5000,
+    });
+  }
+}
+</script>
 
 <style lang="sass">
 @import url('https://fonts.googleapis.com/css2?family=Lato&display=swap')
@@ -224,257 +507,3 @@ td
   cursor: pointer
 </style>
 
-
-<script lang="ts">
-import { Vue, Component, Ref } from "vue-property-decorator";
-import Navbar from "@/components/Navbar.vue";
-import { get, post } from "@/utils/utils";
-import moment from "moment";
-
-@Component({
-  name: "Dashboard",
-  components: {
-    Navbar,
-  },
-})
-export default class Dashboard extends Vue {
-  private jwtToken: string | undefined;
-
-  private uploadStatus = "";
-  private fileList: string[] = [];
-  private fileListParsed: AzureFileParsed = {};
-  private activeVersionList: { [key: string]: string } = {};
-
-  private rTable = false;
-
-  @Ref("fileToUpload")
-  private uploadField!: HTMLInputElement;
-
-  private fields = [
-    "file_name",
-    "version",
-    "size",
-    "md5",
-    "last_modified",
-    "refresh",
-  ];
-
-  created(): void {
-    this.jwtToken = this.$cookies.get("jwtToken");
-    if (!this.jwtToken) {
-      this.$router.push("/");
-    }
-    this.fetchData();
-  }
-
-  private parseTimestamp(timestamp: number) {
-    return moment(timestamp).format("DD-MM-YYYY LT");
-  }
-
-  private parseVersion(timestamp: string) {
-    return moment(timestamp).format("YYYY-MM-DD LT");
-  }
-
-  private humanFileSize(bytes: number, si = false, dp = 1) {
-    const thresh = si ? 1000 : 1024;
-
-    if (Math.abs(bytes) < thresh) {
-      return bytes + " B";
-    }
-
-    const units = si
-      ? ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
-      : ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
-    let u = -1;
-    const r = 10 ** dp;
-
-    do {
-      bytes /= thresh;
-      ++u;
-    } while (
-      Math.round(Math.abs(bytes) * r) / r >= thresh &&
-      u < units.length - 1
-    );
-
-    return bytes.toFixed(dp) + " " + units[u];
-  }
-
-  private async fetchData() {
-    this.fileListParsed = {};
-    this.fileList = [];
-    this.activeVersionList = {};
-
-    const files = await this.listFiles();
-    if (files.data) {
-      for (const file of files.data) {
-        if (!this.fileListParsed[file.file_name]) {
-          this.fileListParsed[file.file_name] = [];
-        }
-
-        this.fileListParsed[file.file_name].push(file);
-      }
-      this.fileList.push(...Object.keys(this.fileListParsed));
-
-      for (const f of this.fileList) {
-        this.activeVersionList[f] = this.fileListParsed[f][0].version;
-      }
-    }
-  }
-
-  private getFileData(key: string) {
-    const version = this.activeVersionList[key];
-    return (
-      this.fileListParsed[key].find((val) => val.version === version) ??
-      this.fileListParsed[key][0]
-    );
-  }
-
-  private getAllVersions(key: string) {
-    return this.fileListParsed[key].map((val) => val.version);
-  }
-
-  private setActiveVersion(key: string, version: string) {
-    this.$set(this.activeVersionList, key, version);
-    this.refreshTable();
-  }
-
-  private refreshTable() {
-    this.rTable = !this.rTable;
-  }
-
-  private onInputChange(event: HTMLInputFileEvent) {
-    if (event) {
-      const files = event.target.files;
-      for (const f of files) {
-        this.uploadFile(f);
-      }
-    }
-  }
-
-  private dragover(event: DragEvent) {
-    event.preventDefault();
-  }
-
-  private dragleave(event: DragEvent) {
-    event.preventDefault();
-  }
-
-  private dropFile(event: DragEvent) {
-    if (event) {
-      event.preventDefault();
-      if (event.dataTransfer) {
-        for (const f of event.dataTransfer?.files) {
-          this.uploadFile(f);
-        }
-      }
-    }
-  }
-
-  private openUploadDialog() {
-    this.uploadField.click();
-  }
-
-  private async uploadFile(file: File) {
-    if (file && this.jwtToken) {
-      this.$toast.info("Uploading " + file.name, {
-        message: "Uploading " + file.name,
-        position: "top",
-        duration: 5000,
-      });
-      const resp = (await (
-        await post("/api/upload?path=" + file.name, file, this.jwtToken, false)
-      ).json()) as UploadResponse;
-
-      if (resp.success) {
-        this.$toast.success("Uploaded " + file.name, {
-          message: "Uploaded " + file.name,
-          position: "top",
-          type: "success",
-          duration: 5000,
-        });
-      } else {
-        this.$toast.error("Failed to upload " + file.name, {
-          message: "Failed to upload " + file.name,
-          position: "top",
-          type: "error",
-          duration: 5000,
-        });
-      }
-
-      await this.fetchData();
-    }
-  }
-
-  private async listFiles(): Promise<BlobListResponse> {
-    if (this.jwtToken) {
-      const resp = await (await get("/api/list", this.jwtToken)).json();
-      return resp as BlobListResponse;
-    }
-
-    return {
-      success: false,
-      data: [],
-    };
-  }
-
-  private async downloadFile(key: string, version: string) {
-    if (this.jwtToken) {
-      const resp = await get(
-        "/api/download?path=" + key + "&version=" + version,
-        this.jwtToken
-      );
-      const blob = await resp.blob();
-
-      var a = document.createElement("a");
-      document.body.appendChild(a);
-      a.style.display = "none";
-
-      var file = window.URL.createObjectURL(blob);
-      a.href = file;
-      a.download = key;
-      a.click();
-      URL.revokeObjectURL(file);
-
-      a.remove();
-
-      this.$toast.info("Downloaded file successfully", {
-        message: "Downloaded file successfully",
-        position: "top",
-        duration: 5000,
-      });
-    }
-  }
-
-  private async deleteFile(key: string, version: string) {
-    if (this.jwtToken) {
-      const resp = await post(
-        "/api/delete",
-        {
-          file_name: key,
-          version,
-        },
-        this.jwtToken
-      );
-
-      this.$toast.info("Deleted file successfully", {
-        message: "Deleted file successfully",
-        position: "top",
-        duration: 5000,
-      });
-
-      await this.fetchData();
-    }
-  }
-
-  private logout() {
-    this.$cookies.remove("jwtToken");
-    this.$router.push("/");
-    this.$toast.success("Logged out", {
-      message: "Logged out",
-      position: "top",
-      type: "success",
-      duration: 5000,
-    });
-  }
-}
-</script>

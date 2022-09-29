@@ -11,6 +11,8 @@ import "@/plugins/composition"
 Vue.prototype.$mapFields = Vue
 Vue.config.productionTip = false
 
+export const bus = new Vue()
+
 new Vue({
   router,
   render: (h) => h(App),
