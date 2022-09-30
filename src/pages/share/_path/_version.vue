@@ -20,22 +20,33 @@ import { bus } from "@/main";
   },
 })
 export default class Dashboard extends Vue {
+  private fullPath = "";
   mounted(): void {
-    const path = decodeURIComponent(this.$route.params.path);
+    this.fullPath = decodeURIComponent(this.$route.params.path);
     const version = decodeURIComponent(this.$route.params.version);
 
+    console.log(this.fullPath.split(":")[0], version);
+
     console.log("emitting");
-    bus.$emit("showDecryptModal", path, version, this._downloadFile.bind(this));
+    bus.$emit(
+      "showDecryptModal",
+      this.fullPath.split(":")[0],
+      version,
+      this._downloadFile.bind(this)
+    );
   }
 
-  private async _downloadFile(path: string, version: string, key: string) {
+  private async _downloadFile(pathUid: string, version: string, key: string) {
+    const [path, uid] = this.fullPath.split(":");
     const jwtToken = this.$cookies.get("jwtToken");
 
     if (jwtToken) {
       const resp = await get(
-        `/api/download?path=${path}&version=${version}&key=${key}`,
+        `/api/download?path=${path}&version=${version}&key=${key}&uid=${uid}`,
         jwtToken
       );
+
+      
       const blob = await resp.blob();
 
       var a = document.createElement("a");

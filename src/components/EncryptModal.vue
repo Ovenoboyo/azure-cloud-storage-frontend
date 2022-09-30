@@ -41,7 +41,7 @@ export default class EncryptModal extends Vue {
   }
 
   private generateKey() {
-    this.encKey = genRand(32);
+    this.encKey = genRand(32 + 24);
   }
 
   mounted() {

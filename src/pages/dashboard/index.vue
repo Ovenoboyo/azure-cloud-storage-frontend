@@ -115,7 +115,13 @@
                 src="@/assets/img/ant-design_share-alt-outlined.svg"
                 alt="share"
                 class="share-icon"
-                @click="shareFile(data.item, activeVersionList[data.item])"
+                @click="
+                  shareFile(
+                    data.item,
+                    activeVersionList[data.item],
+                    fileListParsed[data.item][0].uid
+                  )
+                "
               />
             </div>
           </template>
@@ -231,6 +237,8 @@ export default class Dashboard extends Vue {
         this.activeVersionList[f] = this.fileListParsed[f][0].version;
       }
     }
+
+    console.log(this.fileListParsed);
   }
 
   private getFileData(key: string) {
@@ -373,11 +381,11 @@ export default class Dashboard extends Vue {
     }
   }
 
-  private shareFile(path: string, version: string) {
+  private shareFile(path: string, version: string, uid: string) {
     console.log(path, version);
     const currentURL = new URL(window.location.href);
     currentURL.pathname = `/share/${encodeURIComponent(
-      path
+      `${path}:${uid}`
     )}/${encodeURIComponent(version)}`;
 
     navigator.clipboard.writeText(currentURL.toString());
