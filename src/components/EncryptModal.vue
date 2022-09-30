@@ -3,7 +3,7 @@
     <b-container fluid v-if="fileList">
       <b-row v-for="f in fileList" :key="`${f.name}:${f.lastModified}`">
         <b-col>{{ f.name }}</b-col>
-        <b-col>AES</b-col>
+        <b-col>AES + DES</b-col>
         <b-col>
           <b-input v-model="encKey" />
         </b-col>

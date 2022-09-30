@@ -3,7 +3,7 @@
     <b-container fluid v-if="path.length > 0">
       <b-row>
         <b-col>{{ path }}</b-col>
-        <b-col>AES</b-col>
+        <b-col>AES + DES</b-col>
         <b-col>
           <b-input v-model="decKey" />
         </b-col>
@@ -23,10 +23,14 @@ import { Vue, Component } from "vue-property-decorator";
 @Component({})
 export default class DecryptModal extends Vue {
   private path = "";
-  private version = ""
+  private version = "";
 
   private decKey = "";
-  private onSuccessCallback?: (path: string, version: string, key: string) => void;
+  private onSuccessCallback?: (
+    path: string,
+    version: string,
+    key: string
+  ) => void;
 
   private submitFile() {
     if (this.path && this.onSuccessCallback) {
@@ -34,18 +38,22 @@ export default class DecryptModal extends Vue {
     }
 
     this.path = "";
-    this.version = ""
+    this.version = "";
     this.onSuccessCallback = undefined;
 
-    this.$bvModal.hide("decryptModal")
+    this.$bvModal.hide("decryptModal");
   }
 
   mounted() {
     bus.$on(
       "showDecryptModal",
-      (data: string, version: string, onSuccessCallback: typeof this.onSuccessCallback) => {
+      (
+        data: string,
+        version: string,
+        onSuccessCallback: typeof this.onSuccessCallback
+      ) => {
         this.path = data;
-        this.version = version
+        this.version = version;
         this.onSuccessCallback = onSuccessCallback;
         this.$bvModal.show("decryptModal");
       }
