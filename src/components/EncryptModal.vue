@@ -26,7 +26,7 @@ import { Vue, Component } from "vue-property-decorator";
 export default class EncryptModal extends Vue {
   private fileList: FileList | null = null;
 
-  private encKey: string = "";
+  private encKey = "";
   private onSuccessCallback?: (fileList: FileList, key: string) => void;
 
   private submitFile() {
@@ -36,10 +36,12 @@ export default class EncryptModal extends Vue {
 
     this.fileList = null;
     this.onSuccessCallback = undefined;
+
+    this.$bvModal.hide("encryptModal");
   }
 
   private generateKey() {
-    this.encKey = genRand(32)
+    this.encKey = genRand(32);
   }
 
   mounted() {

@@ -36,6 +36,8 @@ export default class DecryptModal extends Vue {
     this.path = "";
     this.version = ""
     this.onSuccessCallback = undefined;
+
+    this.$bvModal.hide("decryptModal")
   }
 
   mounted() {
