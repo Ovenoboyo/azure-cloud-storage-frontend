@@ -110,6 +110,13 @@
                 class="delete-icon"
                 @click="deleteFile(data.item, activeVersionList[data.item])"
               />
+              <img
+                style="cursor: pointer"
+                src="@/assets/img/ant-design_share-alt-outlined.svg"
+                alt="share"
+                class="share-icon"
+                @click="shareFile(data.item, activeVersionList[data.item])"
+              />
             </div>
           </template>
         </b-table>
@@ -135,7 +142,7 @@ import { bus } from "@/main";
   components: {
     Navbar,
     EncryptModal,
-    DecryptModal
+    DecryptModal,
   },
 })
 export default class Dashboard extends Vue {
@@ -319,10 +326,10 @@ export default class Dashboard extends Vue {
   }
 
   private async listFiles(): Promise<BlobListResponse> {
-    console.log('listing files', this.jwtToken)
+    console.log("listing files", this.jwtToken);
     if (this.jwtToken) {
       const resp = await (await get("/api/list", this.jwtToken)).json();
-      console.log(resp)
+      console.log(resp);
 
       return resp as BlobListResponse;
     }
@@ -334,8 +341,8 @@ export default class Dashboard extends Vue {
   }
 
   private downloadFile(key: string, version: string) {
-    console.log('downloading')
-    bus.$emit('showDecryptModal', key, version, this._downloadFile.bind(this))
+    console.log("downloading");
+    bus.$emit("showDecryptModal", key, version, this._downloadFile.bind(this));
   }
 
   private async _downloadFile(path: string, version: string, key: string) {
@@ -364,6 +371,16 @@ export default class Dashboard extends Vue {
         duration: 5000,
       });
     }
+  }
+
+  private shareFile(path: string, version: string) {
+    console.log(path, version);
+    const currentURL = new URL(window.location.href);
+    currentURL.pathname = `/share/${encodeURIComponent(
+      path
+    )}/${encodeURIComponent(version)}`;
+
+    navigator.clipboard.writeText(currentURL.toString());
   }
 
   private async deleteFile(key: string, version: string) {
@@ -495,6 +512,10 @@ td
   margin-left: 4px
 
 .delete-icon
+  margin-left: 36px
+
+.share-icon
+  width: 25px
   margin-left: 36px
 
 .dropdown-icon

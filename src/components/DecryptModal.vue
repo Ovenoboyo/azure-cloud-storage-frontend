@@ -21,11 +21,11 @@ import { bus } from "@/main";
 import { Vue, Component } from "vue-property-decorator";
 
 @Component({})
-export default class EncryptModal extends Vue {
+export default class DecryptModal extends Vue {
   private path = "";
   private version = ""
 
-  private decKey: string = "";
+  private decKey = "";
   private onSuccessCallback?: (path: string, version: string, key: string) => void;
 
   private submitFile() {

@@ -34,7 +34,7 @@ function getAuthHeader(token?: string) {
 export function genRand (len: number) {
     let result = '';
     const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    for (var i = len; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
+    for (let i = len; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
     console.log(result)
     return result;
 }
