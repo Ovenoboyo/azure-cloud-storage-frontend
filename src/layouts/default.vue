@@ -16,22 +16,20 @@ import { get } from "@/utils/utils";
 @Component({})
 export default class DefaultLayout extends Vue {
   async created() {
-    if (process.env.NODE_ENV !== "development") {
-      if (this.$route.name !== "Home") {
-        const token = this.$cookies.get("jwtToken");
-        console.log(this.$route.name);
-        if (token) {
-          if (token) {
-            const resp = await (await get("/validate?token=" + token)).json();
-            if (resp.success) {
-              return;
-            }
-          }
+    // if (process.env.NODE_ENV !== "development") {
+    if (this.$route.name !== "Home") {
+      const token = this.$cookies.get("jwtToken");
+      console.log(this.$route.name, token);
+      if (token) {
+        const resp = await (await get("/validate?token=" + token)).json();
+        if (resp.success) {
+          return;
         }
-
-        this.$router.push("/");
       }
+
+      this.$router.push(`/?redirect=${this.$route.fullPath}`);
     }
   }
+  // }
 }
 </script>

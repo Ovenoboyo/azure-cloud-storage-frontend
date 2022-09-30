@@ -200,7 +200,12 @@ export default class Home extends Vue {
         this.$cookies.set("jwtToken", resp.data.token, 3 * 60 * 60);
         console.log(resp);
 
-        this.$router.push("/dashboard");
+        const redirect = this.hasRedirect();
+        if (redirect) {
+          this.$router.push(redirect);
+        } else {
+          this.$router.push("/dashboard");
+        }
         this.$toast.info("Logged in successfully", {
           duration: 5000,
           message: "Logged in successfully",
@@ -216,6 +221,13 @@ export default class Home extends Vue {
       this.authStatus = "Please complete the captcha and try again";
       this.authSuccess = false;
     }
+  }
+
+  private hasRedirect() {
+    return (this.$route.query.redirect as string)?.replaceAll(
+      "/?redirect=",
+      ""
+    );
   }
 
   private toggleListen() {
