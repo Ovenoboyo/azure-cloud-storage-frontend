@@ -48,6 +48,18 @@
                   />
                 </b-col>
               </b-row>
+              <b-row>
+                <b-col>
+                  <b-input
+                    v-if="!isLogin"
+                    class="login-input"
+                    aria-label="email"
+                    placeholder="Email"
+                    type="email"
+                    v-model="email"
+                  />
+                </b-col>
+              </b-row>
               <b-row class="mt-4">
                 <b-col>
                   <vue-recaptcha
@@ -131,6 +143,7 @@ export default class Home extends Vue {
 
   private username = "";
   private password = "";
+  private email = "";
 
   private authStatus = "";
   private authSuccess = false;
@@ -241,6 +254,7 @@ export default class Home extends Vue {
         await post("/register", {
           username: this.username,
           password: this.password,
+          email: this.email,
         })
       ).json()) as RegisterResponse;
 
