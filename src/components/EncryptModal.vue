@@ -65,7 +65,6 @@ export default class EncryptModal extends Vue {
 
   private async generateKey() {
     this.encKey = genRand(32 + 24);
-    console.log("encoding key", this.encKey);
 
     const rawData = await (
       await fetch(`https://picsum.photos/800?random=${this.encKey}`)

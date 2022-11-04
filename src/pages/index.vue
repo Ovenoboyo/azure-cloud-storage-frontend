@@ -221,7 +221,6 @@ export default class Home extends Vue {
         ).json()) as LoginResponse;
 
         this.$cookies.set("jwtToken", resp.data.token, 3 * 60 * 60);
-        console.log(resp);
 
         const redirect = this.hasRedirect();
         console.log(redirect);

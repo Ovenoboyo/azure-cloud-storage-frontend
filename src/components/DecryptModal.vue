@@ -75,7 +75,6 @@ export default class DecryptModal extends Vue {
       );
       if (typeof data === "string") {
         const decodedKey = await decode(data);
-        console.log("decoded", decodedKey);
         return decodedKey;
       }
     }

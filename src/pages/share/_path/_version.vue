@@ -24,10 +24,6 @@ export default class Dashboard extends Vue {
   mounted(): void {
     this.fullPath = decodeURIComponent(this.$route.params.path);
     const version = decodeURIComponent(this.$route.params.version);
-
-    console.log(this.fullPath.split(":")[0], version);
-
-    console.log("emitting");
     bus.$emit(
       "showDecryptModal",
       this.fullPath.split(":")[0],
@@ -46,7 +42,6 @@ export default class Dashboard extends Vue {
         jwtToken
       );
 
-      
       const blob = await resp.blob();
 
       const a = document.createElement("a");

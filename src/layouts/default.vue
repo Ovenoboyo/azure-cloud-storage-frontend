@@ -19,7 +19,6 @@ export default class DefaultLayout extends Vue {
     // if (process.env.NODE_ENV !== "development") {
     if (this.$route.name !== "Home") {
       const token = this.$cookies.get("jwtToken");
-      console.log(this.$route.name, token);
       if (token) {
         const resp = await (await get("/validate?token=" + token)).json();
         if (resp.success) {

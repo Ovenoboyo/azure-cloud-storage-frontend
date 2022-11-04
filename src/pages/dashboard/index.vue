@@ -334,11 +334,8 @@ export default class Dashboard extends Vue {
   }
 
   private async listFiles(): Promise<BlobListResponse> {
-    console.log("listing files", this.jwtToken);
     if (this.jwtToken) {
       const resp = await (await get("/api/list", this.jwtToken)).json();
-      console.log(resp);
-
       return resp as BlobListResponse;
     }
 
@@ -349,7 +346,6 @@ export default class Dashboard extends Vue {
   }
 
   private downloadFile(key: string, version: string) {
-    console.log("downloading");
     bus.$emit("showDecryptModal", key, version, this._downloadFile.bind(this));
   }
 
@@ -382,7 +378,6 @@ export default class Dashboard extends Vue {
   }
 
   private shareFile(path: string, version: string, uid: string) {
-    console.log(path, version);
     const currentURL = new URL(window.location.href);
     currentURL.pathname = `/share/${encodeURIComponent(
       `${path}:${uid}`
@@ -413,7 +408,6 @@ export default class Dashboard extends Vue {
   }
 
   private logout() {
-    console.log("pusing to /");
     this.$cookies.remove("jwtToken");
     this.$router.push("/");
     this.$toast.success("Logged out", {
