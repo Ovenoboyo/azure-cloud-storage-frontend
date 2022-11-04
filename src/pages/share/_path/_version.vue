@@ -11,6 +11,7 @@ import { Component } from "vue-property-decorator";
 import Vue from "vue";
 import { get } from "@/utils/utils";
 import { bus } from "@/main";
+import { Buffer } from "buffer";
 
 @Component({
   name: "Dashboard",
@@ -22,7 +23,11 @@ import { bus } from "@/main";
 export default class Dashboard extends Vue {
   private fullPath = "";
   mounted(): void {
-    this.fullPath = decodeURIComponent(this.$route.params.path);
+    this.fullPath = Buffer.from(
+      decodeURIComponent(this.$route.params.path),
+      "base64"
+    ).toString("utf8");
+    console.log(this.$route.params.path, this.fullPath);
     const version = decodeURIComponent(this.$route.params.version);
     bus.$emit(
       "showDecryptModal",

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@vue/composition-api": "^1.7.1",
+    "Buffer": "^0.0.0",
     "bootstrap": "^5.2.2",
     "bootstrap-vue": "^2.23.1",
     "browserslist": "^4.21.4",

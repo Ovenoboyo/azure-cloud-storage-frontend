@@ -142,6 +142,7 @@ import EncryptModal from "@/components/EncryptModal.vue";
 import DecryptModal from "@/components/DecryptModal.vue";
 
 import { bus } from "@/main";
+import { Buffer } from "buffer";
 
 @Component({
   name: "Dashboard",
@@ -380,7 +381,7 @@ export default class Dashboard extends Vue {
   private shareFile(path: string, version: string, uid: string) {
     const currentURL = new URL(window.location.href);
     currentURL.pathname = `/share/${encodeURIComponent(
-      `${path}:${uid}`
+      Buffer.from(`${path}:${uid}`).toString("base64")
     )}/${encodeURIComponent(version)}`;
 
     navigator.clipboard.writeText(currentURL.toString());
