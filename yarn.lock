@@ -10121,6 +10121,11 @@ ts-loader@^9.2.5:
     micromatch "^4.0.0"
     semver "^7.3.4"
 
+ts-steganography@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/ts-steganography/-/ts-steganography-3.0.2.tgz#e8b2cd25b06d0ef0ce627a5d34c96c477d19cb10"
+  integrity sha512-MPBweWEZdY/DriELfQG8DPfMqjM8ETKfRc/LlDGMlAbvq3nCQ73EA4EqFCvGdS7Re/Et4VrFYQde4nY4cJb5aw==
+
 tslib@^1.8.1:
   version "1.14.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
