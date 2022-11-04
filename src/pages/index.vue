@@ -33,6 +33,7 @@
                   "
                   cols="auto"
                   class="mic-icon"
+                  v-if="hasSpeech"
                 >
                   <mic-icon @click.native="toggleListen" :stroke="micStroke" />
                 </b-col>
@@ -115,6 +116,7 @@
       <SpeechRecognitionComponent
         :isListen="isListen"
         @result="onSpeechDetected"
+        v-if="hasSpeech"
       />
     </b-container>
   </div>
@@ -153,6 +155,10 @@ export default class Home extends Vue {
   private isListen = false;
 
   private micStroke = "black";
+
+  private get hasSpeech() {
+    return window.SpeechRecognition;
+  }
 
   @Watch("authStatus")
   private onAuthStatusChanged() {
@@ -194,7 +200,11 @@ export default class Home extends Vue {
   }
 
   private toggleLoginSignup() {
-    (this.$refs.recaptcha as any).reset();
+    try {
+      (this.$refs.recaptcha as any).reset();
+    } catch (e) {
+      console.error("Failed to reset recaptcha", e);
+    }
     if (this.isLogin) this.authStatus = "";
     this.isListen = false;
     this.isLogin = !this.isLogin;
@@ -214,11 +224,8 @@ export default class Home extends Vue {
         console.log(resp);
 
         const redirect = this.hasRedirect();
-        if (redirect) {
-          this.$router.push(redirect);
-        } else {
-          this.$router.push("/dashboard");
-        }
+        console.log(redirect);
+        this.$router.push(redirect || "/dashboard");
         this.$toast.info("Logged in successfully", {
           duration: 5000,
           message: "Logged in successfully",

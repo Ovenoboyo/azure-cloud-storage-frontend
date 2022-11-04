@@ -49,11 +49,11 @@ export default class Dashboard extends Vue {
       
       const blob = await resp.blob();
 
-      var a = document.createElement("a");
+      const a = document.createElement("a");
       document.body.appendChild(a);
       a.style.display = "none";
 
-      var file = window.URL.createObjectURL(blob);
+      const file = window.URL.createObjectURL(blob);
       a.href = file;
       a.download = path;
       a.click();
