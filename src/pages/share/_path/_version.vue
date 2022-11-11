@@ -14,7 +14,7 @@ import { bus } from "@/main";
 import { Buffer } from "buffer";
 
 @Component({
-  name: "Dashboard",
+  name: "Share",
   components: {
     Navbar,
     DecryptModal,

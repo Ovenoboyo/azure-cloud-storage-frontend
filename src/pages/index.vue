@@ -224,7 +224,9 @@ export default class Home extends Vue {
 
         const redirect = this.hasRedirect();
         console.log(redirect);
-        this.$router.push(redirect || "/dashboard");
+        this.$router.push(
+          !redirect || redirect === "/" ? "/dashboard" : redirect
+        );
         this.$toast.info("Logged in successfully", {
           duration: 5000,
           message: "Logged in successfully",

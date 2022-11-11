@@ -3,7 +3,7 @@
     <b-container fluid v-if="fileList">
       <b-row v-for="f in fileList" :key="`${f.name}:${f.lastModified}`">
         <b-col>{{ f.name }}</b-col>
-        <b-col>AES + DES</b-col>
+        <b-col>AES + 3DES</b-col>
         <!-- <b-col>
           <b-input v-model="encKey" />
         </b-col> -->
@@ -73,6 +73,14 @@ export default class EncryptModal extends Vue {
 
     const dataUrl = await encode(this.encKey, url);
     this.download(dataUrl, "encrypted-key.png");
+
+    this.$toast.info(
+      `DEBUG: Key ${this.encKey} has been embedded in encrypted-key.png`,
+      {
+        message: `DEBUG: Key ${this.encKey} has been embedded in encrypted-key.png`,
+        duration: 10 * 1000,
+      }
+    );
   }
 
   mounted() {
